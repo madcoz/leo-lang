@@ -42,7 +42,7 @@ void symtab::insert(symbol* s) {
     string symbol_key = create_symbol_key(s->get_uid(), this->scope_stack);
     
     if(table.count(symbol_key) > 0)  {
-        throw symtab_insert_invalid_argument("Duplicate key for " + symbol_key);
+        throw symtab_insert_invalid_argument("duplicate key for " + symbol_key);
     }
     
     table.insert(make_pair<string, unique_ptr<symbol> >(symbol_key.c_str(), unique_ptr<symbol>(s)));
@@ -64,14 +64,14 @@ symbol* symtab::lookup(const string& uid) {
             search_symbol = table.at(symbol_key).get();
             break;
         } catch(const out_of_range& oor) {
-            ss << "Out of range for " << uid << " caused by:" << oor.what() << "\n";
+            ss << "out of range for " << uid << " caused by:" << oor.what() << "\n";
             LOGGER_DEBUG(ss.str());
             search_scope.pop_back();
         }
     }
     
     if(search_symbol == nullptr) {
-        throw symtab_lookup_invalid_argument("Can't find in all scope for " + uid);
+        throw symtab_lookup_invalid_argument("can't find in all scope for " + uid);
     }
     
     return search_symbol;
@@ -93,7 +93,7 @@ bool symtab::exist(const string& uid, bool current) {
             search_symbol = table.at(symbol_key).get();
             break;
         } catch(const out_of_range& oor) {
-            ss << "Out of range for " << uid << " caused by:" <<  oor.what() << "\n";
+            ss << "out of range for " << uid << " caused by:" <<  oor.what() << "\n";
             LOGGER_DEBUG(ss.str());
             if(current) {
                 break;
@@ -125,7 +125,7 @@ void symtab::close_scope() {
 
 void symtab::clear() {
     
-    LOGGER_DEBUG("Cleaning symbol table");
+    LOGGER_DEBUG("cleaning symbol table");
     last.clear();
     scope_stack.clear();
 }

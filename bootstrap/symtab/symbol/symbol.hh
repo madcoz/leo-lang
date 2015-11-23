@@ -104,6 +104,8 @@ class literal_uint32_symbol : public symbol {
         virtual ~literal_uint32_symbol() {}
         
         std::string get_type() { return SYMBOL_LITERAL_UINT32; }
+        
+        uint32_t get_value() { return value; }
 };
 
 class literal_uint64_symbol : public symbol {

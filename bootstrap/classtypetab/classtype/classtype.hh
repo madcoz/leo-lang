@@ -6,6 +6,7 @@
 #ifndef CLASSTYPE_HH
 #define CLASSTYPE_HH
 
+#include <cstdint>
 #include <string>
 
 #define CLASS_TYPE_INT8 "int8"
@@ -18,6 +19,9 @@ class class_type {
 };
 
 class int8_class_type : public class_type {
+    
+    private:
+        int8_t value;
     
     public:
         std::string get_type() { return CLASS_TYPE_INT8; }

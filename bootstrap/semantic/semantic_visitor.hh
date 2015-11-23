@@ -6,9 +6,20 @@
 #ifndef SEMANTIC_VISITOR_HH
 #define SEMANTIC_VISITOR_HH
 
+#include <stdexcept>
+
 #include "../pattern/visitor.hh"
+#include "../classtypetab/classtype/classtype.hh"
+#include "../symtab/symbol/symbol.hh"
 
 class semantic_visitor : public visitor {
+    
+    protected:
+        void check_binary_action(const std::string& oper, class_type* cls_t, symbol* sym);
+        
+        void check_define_action(class_type* cls_t, symbol* sym);
+        
+        void check_define_int8(symbol* sym);
     
     public:
         void visit(ident_ast& node);
@@ -56,6 +67,16 @@ class semantic_visitor : public visitor {
         void visit(struct_def_expr_ast& node);
         
         void visit(new_ast& node); 
+};
+
+class semantic_check_out_of_range : public std::out_of_range {
+    
+    public:
+        explicit semantic_check_out_of_range(const std::string& what_arg)
+            : std::out_of_range(what_arg) {}
+            
+        explicit semantic_check_out_of_range(const char* what_arg)
+            : std::out_of_range(what_arg) {}
 };
 
 #endif

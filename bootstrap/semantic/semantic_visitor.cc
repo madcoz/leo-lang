@@ -29,10 +29,38 @@ using namespace std;
 
 //TO-DO: rearrange if need to separate to another class
 string to_string(const yy::location& loc) {
+    
     stringstream ss;
     ss << loc;
     return ss.str();
 }    
+
+//TO-DO: rearrange in a pattern chain of responsibility's class
+void semantic_visitor::check_binary_action(const std::string& oper, class_type* cls_t, symbol* sym) {
+    
+    if(oper == ":=") {
+        check_define_action(cls_t, sym);
+    }
+}
+
+void semantic_visitor::check_define_action(class_type* cls_t, symbol* sym) {
+    
+    if(cls_t->get_type() == CLASS_TYPE_INT8) {
+        check_define_int8(sym);
+    }
+}
+
+void semantic_visitor::check_define_int8(symbol* sym) {
+    
+    if(sym->get_type() == SYMBOL_LITERAL_UINT32) {
+        literal_uint32_symbol* ui32_sym = dynamic_cast<literal_uint32_symbol*>(sym);
+        ASSERT_CAST(ui32_sym, "literal_uint32_symbol*", "symbol*");
+        uint32_t value = ui32_sym->get_value();
+        if(value > SCHAR_MAX) {
+            throw semantic_check_out_of_range("int8 out of range:" + to_string(value));
+        }
+    }
+}
     
 void semantic_visitor::visit(ident_ast& node) {
     
@@ -62,13 +90,30 @@ void semantic_visitor::visit(ident_decl_ast& node) {
 
 void semantic_visitor::visit(ident_def_ast& node) {
     
-    //try {
-        ident_decl_ast* ident_decl_expr = node.get_decl_expr();
+    ident_decl_ast* ident_decl_expr = node.get_decl_expr();
+    try {
         ident_decl_expr->accept(*this);
         ast* init_expr = node.get_init_expr();
         init_expr->accept(*this);
-        //TO-DO: check compatible class types
-    //}
+        symbol* tmp_sym = SYMTAB_LOOKUP(ident_decl_expr->get_ident_expr()->get_uid());
+        if(tmp_sym->get_type() != SYMBOL_TYPE_IDENT) {
+            LOGGER_ERROR("bug ident_def_ast's lvalue must be identifier symbol type");
+        }
+        ident_symbol* ident_sym = dynamic_cast<ident_symbol*>(tmp_sym);
+        ASSERT_CAST(ident_sym, "ident_symbol*", "symbol*");
+        symbol* init_sym = SYMTAB_LOOKUP(init_expr->get_uid());
+        check_binary_action(":=", ident_sym->get_class_type(), init_sym);
+    } catch(const symtab_lookup_invalid_argument& ex) {
+        LOGGER_DEBUG(ex.what());
+    } catch(const semantic_check_out_of_range& ex) {
+        stringstream ss;
+        ident_ast* ident_expr = ident_decl_expr->get_ident_expr();
+        ss << to_string(ident_expr->get_loc());
+        ss << ":initialize " << ident_expr->get_name();
+        ss << ":" << ex.what();
+        LOGGER_ERROR(ss.str());
+        LOGGER_DEBUG(ex.what());
+    }
 }
 
 void semantic_visitor::visit(branch_ast& node) {
