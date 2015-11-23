@@ -21,4 +21,7 @@ source code in the leo source code.
 
 For the current time being, feel free to look into the bootstrap folder for the first phase 
 implementation.
+
+All source files are distributed under the GNU GPLv2 or later license
+found in the LICENSE file.
 </pre>
