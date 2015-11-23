@@ -1,3 +1,4 @@
+<pre>
 Leo bootstrap Compiler(lc)
 
 lc is a bootstrap compiler for leo (LEOpard) programming language.
@@ -8,9 +9,8 @@ For now the language and the compiler are still in its infancy.
 All source files are distributed under the GNU GPLv2 or later license
 found in the LICENSE file.
 
-<pre>
 How to build:
-1) Build from source, the binaries will be located in <src>/bin
+1) Build from source, the binaries will be located in &gt;src&lt;/bin
    make all
    make
 
@@ -23,12 +23,12 @@ Usage:
    lc -V
    
 2) Display lexical scanning details
-   lc -s <filename>
+   lc -s &gt;filename&lt;
    
 3) Display syntax parsing details
-   lc -p <filename>
+   lc -p &gt;filename&lt;
    
-4) Display program logging details, <lv> range from 1 to 3
+4) Display program logging details, &gt;lv&lt; range from 1 to 3
    with the more higher level it is, the more information it contains
-   lc -v<lv>
+   lc -v&gt;lv&lt;
 </pre>
