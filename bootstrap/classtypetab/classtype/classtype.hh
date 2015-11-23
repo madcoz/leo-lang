@@ -8,12 +8,19 @@
 
 #include <string>
 
+#define CLASS_TYPE_INT8 "int8"
 #define CLASS_TYPE_FUNC "func"
 
 class class_type {
     
     public:
         virtual std::string get_type() = 0;
+};
+
+class int8_class_type : public class_type {
+    
+    public:
+        std::string get_type() { return CLASS_TYPE_INT8; }
 };
 
 #endif

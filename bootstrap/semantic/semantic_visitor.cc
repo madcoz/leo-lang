@@ -36,8 +36,7 @@ string to_string(const yy::location& loc) {
     
 void semantic_visitor::visit(ident_ast& node) {
     
-    /* If uid exists it means the identifier is already defined.
-     */
+    // If uid exists it means the identifier is already defined.
     if(node.get_uid().empty()) {
         LOGGER_ERROR(to_string(node.get_loc()) + ":undefine '" + node.get_name() + "' identifier");
     }
@@ -409,11 +408,9 @@ void semantic_visitor::visit(type_ast& node) {
     //TO-DO: create class_type by type_name
     string type_name = node.get_type_name();
     class_type* cls_t = nullptr;
-    /*
-    if(type_name == ?) {
-        
+    if(type_name == CLASS_TYPE_INT8) {
+        cls_t = new int8_class_type;
     }
-    */
     if(cls_t == nullptr) {
         LOGGER_ERROR(to_string(node.get_loc()) + ":type '" + type_name + "' is not defined");
         return;
