@@ -18,17 +18,20 @@ How to build:
    make clean
 
 Usage:
-1) Get lc's version
+1) Compile source
+   lc &lt;options&gt; &lt;filename&gt;
+
+2) Get lc's version
    lc --version
    lc -V
    
-2) Display lexical scanning details
+3) Display lexical scanning details
    lc -s &lt;filename&gt;
    
-3) Display syntax parsing details
+4) Display syntax parsing details
    lc -p &lt;filename&gt;
    
-4) Display program logging details, &lt;lv&gt; range from 1 to 3
+5) Display program logging details, &lt;lv&gt; range from 1 to 3
    with the more higher level it is, the more information it contains
-   lc -v&lt;lv&gt;
+   lc -v&lt;lv&gt; &lt;filename&gt;
 </pre>
