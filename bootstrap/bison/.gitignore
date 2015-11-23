@@ -1,0 +1,6 @@
+#Ignore generated file from bison
+location.hh
+position.hh
+stack.hh
+parser.tab.hh
+parser.tab.cc
