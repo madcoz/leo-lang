@@ -19,5 +19,6 @@ Hopefully, it will become a powerful compiler that I can use to implement big pr
 For FFI, I would like to implement in SOA-like approach without embedding foreign language
 source code in the leo source code.
 
-For the current time being, feel free to look into the bootstrap folder for the first phase implementation.
+For the current time being, feel free to look into the bootstrap folder for the first phase 
+implementation.
 </pre>
