@@ -10,7 +10,7 @@ All source files are distributed under the GNU GPLv2 or later license
 found in the LICENSE file.
 
 How to build:
-1) Build from source, the binaries will be located in &gt;src&lt;/bin
+1) Build from source, the binaries will be located in &lt;src&gt;/bin
    make all
    make
 
@@ -23,12 +23,12 @@ Usage:
    lc -V
    
 2) Display lexical scanning details
-   lc -s &gt;filename&lt;
+   lc -s &lt;filename&gt;
    
 3) Display syntax parsing details
-   lc -p &gt;filename&lt;
+   lc -p &lt;filename&gt;
    
-4) Display program logging details, &gt;lv&lt; range from 1 to 3
+4) Display program logging details, &lt;lv&gt; range from 1 to 3
    with the more higher level it is, the more information it contains
-   lc -v&gt;lv&lt;
+   lc -v&lt;lv&gt;
 </pre>
