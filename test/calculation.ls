@@ -6,7 +6,8 @@ include `math.ls`;
 
 func main: int8() {
 
-    x: int8 = 128;
+    w: int8 = 128;
+    x: int8 = 127;
     y: int8 = 2;
     z: int8;
     
