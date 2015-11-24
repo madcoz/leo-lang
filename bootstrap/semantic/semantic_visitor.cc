@@ -37,14 +37,14 @@ string to_string(const yy::location& loc) {
 
 semantic_visitor::semantic_visitor() {
     //TO-DO: check if can reduce more code
-    def_num_range_val_map = { { CLASS_TYPE_INT8, make_pair([](uint32_t x){ return x > SCHAR_MAX; }, [](uint64_t x){ return true; }) }, 
-                              { CLASS_TYPE_INT16, make_pair([](uint32_t x){ return x > INT_MAX; }, [](uint64_t x){ return true; }) }, 
-                              { CLASS_TYPE_INT32, make_pair([](uint32_t x){ return x > LONG_MAX; }, [](uint64_t x){ return true;}) }, 
-                              { CLASS_TYPE_INT64, make_pair([](uint32_t x){ return false; }, [](uint64_t x){ return x > LLONG_MAX;}) },
-                              { CLASS_TYPE_UINT8, make_pair([](uint32_t x){ return x > UCHAR_MAX; }, [](uint64_t x){ return true; }) },
-                              { CLASS_TYPE_UINT16, make_pair([](uint32_t x){ return x > UINT_MAX; }, [](uint64_t x){ return true; }) },
-                              { CLASS_TYPE_UINT32, make_pair([](uint32_t x){ return x > ULONG_MAX; }, [](uint64_t x){ return true;}) }, 
-                              { CLASS_TYPE_UINT64, make_pair([](uint32_t x){ return false; }, [](uint64_t x){ return x > ULLONG_MAX; }) } };
+    def_num_range_val_map = { { CLASS_TYPE_INT8, make_pair([](int32_t x){ return x > SCHAR_MAX; }, [](int64_t x){ return true; }) }, 
+                              { CLASS_TYPE_INT16, make_pair([](int32_t x){ return x > INT_MAX; }, [](int64_t x){ return true; }) }, 
+                              { CLASS_TYPE_INT32, make_pair([](int32_t x){ return x > LONG_MAX; }, [](int64_t x){ return true;}) }, 
+                              { CLASS_TYPE_INT64, make_pair([](int32_t x){ return false; }, [](int64_t x){ return x > LLONG_MAX;}) },
+                              { CLASS_TYPE_UINT8, make_pair([](int32_t x){ return x > UCHAR_MAX; }, [](int64_t x){ return true; }) },
+                              { CLASS_TYPE_UINT16, make_pair([](int32_t x){ return x > UINT_MAX; }, [](int64_t x){ return true; }) },
+                              { CLASS_TYPE_UINT32, make_pair([](int32_t x){ return x > ULONG_MAX; }, [](int64_t x){ return true;}) }, 
+                              { CLASS_TYPE_UINT64, make_pair([](int32_t x){ return false; }, [](int64_t x){ return x > ULLONG_MAX; }) } };
 }    
 
 //TO-DO: rearrange in a pattern chain of responsibility's class
@@ -65,22 +65,22 @@ void semantic_visitor::check_define_action(class_type* cls_t, symbol* sym) {
 }
 
 void semantic_visitor::check_define_numeric(const std::string& type_str, 
-                                  std::pair<std::function<bool(uint32_t)>, 
-                                            std::function<bool(uint64_t)> > check_out_of_range_pair, 
+                                  std::pair<std::function<bool(int32_t)>, 
+                                            std::function<bool(int64_t)> > check_out_of_range_pair, 
                                   symbol* sym) {
     
-    if(sym->get_type() == SYMBOL_LITERAL_UINT32) {
-        literal_uint32_symbol* ui32_sym = dynamic_cast<literal_uint32_symbol*>(sym);
-        ASSERT_CAST(ui32_sym, "literal_uint32_symbol*", "symbol*");
-        uint32_t value = ui32_sym->get_value();
+    if(sym->get_type() == SYMBOL_LITERAL_INT32) {
+        literal_int32_symbol* i32_sym = dynamic_cast<literal_int32_symbol*>(sym);
+        ASSERT_CAST(i32_sym, "literal_int32_symbol*", "symbol*");
+        int32_t value = i32_sym->get_value();
         if(check_out_of_range_pair.first(value)) {
             throw semantic_check_out_of_range(type_str + " out of range:" + to_string(value));
         }
         return;
-    } else if(sym->get_type() == SYMBOL_LITERAL_UINT64) {
-        literal_uint64_symbol* ui64_sym = dynamic_cast<literal_uint64_symbol*>(sym);
-        ASSERT_CAST(ui64_sym, "literal_uint64_symbol*", "symbol*");
-        uint64_t value = ui64_sym->get_value();
+    } else if(sym->get_type() == SYMBOL_LITERAL_INT64) {
+        literal_int64_symbol* i64_sym = dynamic_cast<literal_int64_symbol*>(sym);
+        ASSERT_CAST(i64_sym, "literal_int64_symbol*", "symbol*");
+        int64_t value = i64_sym->get_value();
         if(check_out_of_range_pair.second(value)) {
             throw semantic_check_out_of_range(type_str + " out of range:" + to_string(value));
         }
@@ -314,21 +314,21 @@ void semantic_visitor::visit(num_ast& node) {
         }
         try {
             symbol* sym = nullptr;
-            //Use default uint32
-            uint32_t ui32 = strtoul(num_str.c_str(), nullptr, base);
-            if(ui32 == ULONG_MAX && errno == ERANGE) {
-                //Try uint64
+            //Use default int32
+            int32_t i32 = strtol(num_str.c_str(), nullptr, base);
+            if(i32 == LONG_MAX && errno == ERANGE) {
+                //Try int64
                 errno = 0;
-                uint64_t ui64 = strtoull(num_str.c_str(), nullptr, base);
-                if(ui64 == ULLONG_MAX && errno == ERANGE) {
+                int64_t i64 = strtoll(num_str.c_str(), nullptr, base);
+                if(i64 == LLONG_MAX && errno == ERANGE) {
                     LOGGER_ERROR("literal number too large:" + num_str);
                     return;
                 }
-                node.set_uid("<ui64>:" + to_string(ui64));
-                sym = new literal_uint64_symbol(ui64);
+                node.set_uid("<i64>:" + to_string(i64));
+                sym = new literal_int64_symbol(i64);
             } else {
-                node.set_uid("<ui32>:" + to_string(ui32));
-                sym = new literal_uint32_symbol(ui32);
+                node.set_uid("<i32>:" + to_string(i32));
+                sym = new literal_int32_symbol(i32);
             }
             if(sym == nullptr) {
                 LOGGER_ERROR("bug sym is null");

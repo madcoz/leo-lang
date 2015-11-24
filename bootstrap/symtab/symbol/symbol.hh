@@ -15,6 +15,8 @@
 #define SYMBOL_LITERAL_STRING "char*"
 #define SYMBOL_LITERAL_CHAR "char"
 #define SYMBOL_LITERAL_BOOL "bool"
+#define SYMBOL_LITERAL_INT32 "int32"
+#define SYMBOL_LITERAL_INT64 "int64"
 #define SYMBOL_LITERAL_UINT32 "uint32"
 #define SYMBOL_LITERAL_UINT64 "uint64"
 
@@ -91,6 +93,37 @@ class literal_bool_symbol : public symbol {
         virtual ~literal_bool_symbol() {}
         
         std::string get_type() { return SYMBOL_LITERAL_BOOL; }
+};
+
+//TO-DO: use template to reduce the numeric types
+class literal_int32_symbol : public symbol {
+    
+    private:
+        int32_t value;
+    
+    public:
+        literal_int32_symbol(const int32_t value) : value(value) {}
+        
+        virtual ~literal_int32_symbol() {}
+        
+        std::string get_type() { return SYMBOL_LITERAL_INT32; }
+        
+        int32_t get_value() { return value; }
+};
+
+class literal_int64_symbol : public symbol {
+        
+    private:
+        int64_t value;
+    
+    public:
+        literal_int64_symbol(const int64_t value) : value(value) {}
+        
+        virtual ~literal_int64_symbol() {}
+        
+        std::string get_type() { return SYMBOL_LITERAL_INT64; }
+        
+        int64_t get_value() { return value; }
 };
 
 class literal_uint32_symbol : public symbol {
