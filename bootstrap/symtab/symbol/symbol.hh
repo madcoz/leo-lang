@@ -12,11 +12,11 @@
 
 #include "../../classtypetab/classtype/classtype.hh"
 
-#define SYMBOL_LITERAL_STRING "s"
-#define SYMBOL_LITERAL_CHAR "c"
-#define SYMBOL_LITERAL_BOOL "b"
-#define SYMBOL_LITERAL_UINT32 "ui32"
-#define SYMBOL_LITERAL_UINT64 "ui64"
+#define SYMBOL_LITERAL_STRING "char*"
+#define SYMBOL_LITERAL_CHAR "char"
+#define SYMBOL_LITERAL_BOOL "bool"
+#define SYMBOL_LITERAL_UINT32 "uint32"
+#define SYMBOL_LITERAL_UINT64 "uint64"
 
 #define SYMBOL_TYPE_IDENT "id"
 
@@ -119,6 +119,8 @@ class literal_uint64_symbol : public symbol {
         virtual ~literal_uint64_symbol() {}
         
         std::string get_type() { return SYMBOL_LITERAL_UINT64; }
+        
+        uint64_t get_value() { return value; }
 };
 
 #endif

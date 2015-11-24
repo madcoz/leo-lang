@@ -7,6 +7,9 @@
 #define SEMANTIC_VISITOR_HH
 
 #include <stdexcept>
+#include <functional>
+#include <utility>
+#include <unordered_map>
 
 #include "../pattern/visitor.hh"
 #include "../classtypetab/classtype/classtype.hh"
@@ -15,13 +18,24 @@
 class semantic_visitor : public visitor {
     
     protected:
+        std::unordered_map<std::string,
+                           std::pair<std::function<bool(uint32_t)>, 
+                           std::function<bool(uint64_t)> > > def_num_range_val_map;
+    
         void check_binary_action(const std::string& oper, class_type* cls_t, symbol* sym);
         
         void check_define_action(class_type* cls_t, symbol* sym);
         
-        void check_define_int8(symbol* sym);
+        void check_define_numeric(const std::string& type_str, 
+                                  std::pair<std::function<bool(uint32_t)>, 
+                                            std::function<bool(uint64_t)> > check_out_of_range_pair, 
+                                  symbol* sym);
     
     public:
+        semantic_visitor();
+        
+        virtual ~semantic_visitor() { def_num_range_val_map.clear(); }
+    
         void visit(ident_ast& node);
         
         void visit(ident_decl_ast& node);
@@ -77,6 +91,17 @@ class semantic_check_out_of_range : public std::out_of_range {
             
         explicit semantic_check_out_of_range(const char* what_arg)
             : std::out_of_range(what_arg) {}
+};
+
+class semantic_check_unsupported_type : public std::invalid_argument {
+
+    public:
+        explicit semantic_check_unsupported_type(const std::string& what_arg)
+            : std::invalid_argument(what_arg) {}
+            
+        explicit semantic_check_unsupported_type(const char* what_arg)
+            : std::invalid_argument(what_arg) {}
+        
 };
 
 #endif

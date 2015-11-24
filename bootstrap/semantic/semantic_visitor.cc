@@ -33,6 +33,18 @@ string to_string(const yy::location& loc) {
     stringstream ss;
     ss << loc;
     return ss.str();
+}
+
+semantic_visitor::semantic_visitor() {
+    //TO-DO: check if can reduce more code
+    def_num_range_val_map = { { CLASS_TYPE_INT8, make_pair([](uint32_t x){ return x > SCHAR_MAX; }, [](uint64_t x){ return true; }) }, 
+                              { CLASS_TYPE_INT16, make_pair([](uint32_t x){ return x > INT_MAX; }, [](uint64_t x){ return true; }) }, 
+                              { CLASS_TYPE_INT32, make_pair([](uint32_t x){ return x > LONG_MAX; }, [](uint64_t x){ return true;}) }, 
+                              { CLASS_TYPE_INT64, make_pair([](uint32_t x){ return false; }, [](uint64_t x){ return x > LLONG_MAX;}) },
+                              { CLASS_TYPE_UINT8, make_pair([](uint32_t x){ return x > UCHAR_MAX; }, [](uint64_t x){ return true; }) },
+                              { CLASS_TYPE_UINT16, make_pair([](uint32_t x){ return x > UINT_MAX; }, [](uint64_t x){ return true; }) },
+                              { CLASS_TYPE_UINT32, make_pair([](uint32_t x){ return x > ULONG_MAX; }, [](uint64_t x){ return true;}) }, 
+                              { CLASS_TYPE_UINT64, make_pair([](uint32_t x){ return false; }, [](uint64_t x){ return x > ULLONG_MAX; }) } };
 }    
 
 //TO-DO: rearrange in a pattern chain of responsibility's class
@@ -45,21 +57,36 @@ void semantic_visitor::check_binary_action(const std::string& oper, class_type* 
 
 void semantic_visitor::check_define_action(class_type* cls_t, symbol* sym) {
     
-    if(cls_t->get_type() == CLASS_TYPE_INT8) {
-        check_define_int8(sym);
+    std::string type_str = cls_t->get_type();
+    
+    if(def_num_range_val_map.find(type_str) != def_num_range_val_map.end()) {
+        check_define_numeric(cls_t->get_type(), def_num_range_val_map[type_str], sym);
     }
 }
 
-void semantic_visitor::check_define_int8(symbol* sym) {
+void semantic_visitor::check_define_numeric(const std::string& type_str, 
+                                  std::pair<std::function<bool(uint32_t)>, 
+                                            std::function<bool(uint64_t)> > check_out_of_range_pair, 
+                                  symbol* sym) {
     
     if(sym->get_type() == SYMBOL_LITERAL_UINT32) {
         literal_uint32_symbol* ui32_sym = dynamic_cast<literal_uint32_symbol*>(sym);
         ASSERT_CAST(ui32_sym, "literal_uint32_symbol*", "symbol*");
         uint32_t value = ui32_sym->get_value();
-        if(value > SCHAR_MAX) {
-            throw semantic_check_out_of_range("int8 out of range:" + to_string(value));
+        if(check_out_of_range_pair.first(value)) {
+            throw semantic_check_out_of_range(type_str + " out of range:" + to_string(value));
         }
+        return;
+    } else if(sym->get_type() == SYMBOL_LITERAL_UINT64) {
+        literal_uint64_symbol* ui64_sym = dynamic_cast<literal_uint64_symbol*>(sym);
+        ASSERT_CAST(ui64_sym, "literal_uint64_symbol*", "symbol*");
+        uint64_t value = ui64_sym->get_value();
+        if(check_out_of_range_pair.second(value)) {
+            throw semantic_check_out_of_range(type_str + " out of range:" + to_string(value));
+        }
+        return;
     }
+    throw semantic_check_unsupported_type(type_str + " unsupported type:" + sym->get_type());
 }
     
 void semantic_visitor::visit(ident_ast& node) {
@@ -90,6 +117,7 @@ void semantic_visitor::visit(ident_decl_ast& node) {
 
 void semantic_visitor::visit(ident_def_ast& node) {
     
+    //TO-DO: optimize the multiple catch exceptions problem
     ident_decl_ast* ident_decl_expr = node.get_decl_expr();
     try {
         ident_decl_expr->accept(*this);
@@ -106,6 +134,14 @@ void semantic_visitor::visit(ident_def_ast& node) {
     } catch(const symtab_lookup_invalid_argument& ex) {
         LOGGER_DEBUG(ex.what());
     } catch(const semantic_check_out_of_range& ex) {
+        stringstream ss;
+        ident_ast* ident_expr = ident_decl_expr->get_ident_expr();
+        ss << to_string(ident_expr->get_loc());
+        ss << ":initialize " << ident_expr->get_name();
+        ss << ":" << ex.what();
+        LOGGER_ERROR(ss.str());
+        LOGGER_DEBUG(ex.what());
+    } catch(const semantic_check_unsupported_type& ex) {
         stringstream ss;
         ident_ast* ident_expr = ident_decl_expr->get_ident_expr();
         ss << to_string(ident_expr->get_loc());
@@ -311,8 +347,8 @@ void semantic_visitor::visit(char_ast& node) {
     
     string value = node.get_char_str();
     size_t length = value.length();
-    if(length != 3 || (value[0] != '\'' && value[length-1] != '\'') ||
-       (value[0] != '"' && value[length-1] != '"')) {
+    if(length != 3 || value[0] != '\'' && value[length-1] != '\'' &&
+       value[0] != '"' && value[length-1] != '"') {
         LOGGER_ERROR("bug unknown literal char:" + value);
         return;
     }

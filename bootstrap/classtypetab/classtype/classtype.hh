@@ -10,6 +10,13 @@
 #include <string>
 
 #define CLASS_TYPE_INT8 "int8"
+#define CLASS_TYPE_INT16 "int16"
+#define CLASS_TYPE_INT32 "int32"
+#define CLASS_TYPE_INT64 "int64"
+#define CLASS_TYPE_UINT8 "uint8"
+#define CLASS_TYPE_UINT16 "uint16"
+#define CLASS_TYPE_UINT32 "uint32"
+#define CLASS_TYPE_UINT64 "uint64"
 #define CLASS_TYPE_FUNC "func"
 
 class class_type {
