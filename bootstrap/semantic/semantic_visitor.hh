@@ -8,7 +8,7 @@
 
 #include <stdexcept>
 #include <functional>
-#include <utility>
+#include <tuple>
 #include <unordered_map>
 
 #include "../pattern/visitor.hh"
@@ -19,16 +19,18 @@ class semantic_visitor : public visitor {
     
     protected:
         std::unordered_map<std::string,
-                           std::pair<std::function<bool(int32_t)>, 
-                           std::function<bool(int64_t)> > > def_num_range_val_map;
+                           std::tuple<std::function<bool(int32_t)>, 
+                                      std::function<bool(int64_t)>,
+                                      std::function<bool(uint64_t)> > > def_num_range_val_map;
     
         void check_binary_action(const std::string& oper, class_type* cls_t, symbol* sym);
         
         void check_define_action(class_type* cls_t, symbol* sym);
         
         void check_define_numeric(const std::string& type_str, 
-                                  std::pair<std::function<bool(int32_t)>, 
-                                            std::function<bool(int64_t)> > check_out_of_range_pair, 
+                                  std::tuple<std::function<bool(int32_t)>, 
+                                             std::function<bool(int64_t)>,
+                                             std::function<bool(uint64_t)> > check_out_of_range, 
                                   symbol* sym);
     
     public:

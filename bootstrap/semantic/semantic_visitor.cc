@@ -37,14 +37,30 @@ string to_string(const yy::location& loc) {
 
 semantic_visitor::semantic_visitor() {
     //TO-DO: check if can reduce more code
-    def_num_range_val_map = { { CLASS_TYPE_INT8, make_pair([](int32_t x){ return x > SCHAR_MAX; }, [](int64_t x){ return true; }) }, 
-                              { CLASS_TYPE_INT16, make_pair([](int32_t x){ return x > INT_MAX; }, [](int64_t x){ return true; }) }, 
-                              { CLASS_TYPE_INT32, make_pair([](int32_t x){ return x > LONG_MAX; }, [](int64_t x){ return true;}) }, 
-                              { CLASS_TYPE_INT64, make_pair([](int32_t x){ return false; }, [](int64_t x){ return x > LLONG_MAX;}) },
-                              { CLASS_TYPE_UINT8, make_pair([](int32_t x){ return x > UCHAR_MAX; }, [](int64_t x){ return true; }) },
-                              { CLASS_TYPE_UINT16, make_pair([](int32_t x){ return x > UINT_MAX; }, [](int64_t x){ return true; }) },
-                              { CLASS_TYPE_UINT32, make_pair([](int32_t x){ return x > ULONG_MAX; }, [](int64_t x){ return true;}) }, 
-                              { CLASS_TYPE_UINT64, make_pair([](int32_t x){ return false; }, [](int64_t x){ return x > ULLONG_MAX; }) } };
+    def_num_range_val_map = { { CLASS_TYPE_INT8, make_tuple([](int32_t x){ return x <= SCHAR_MAX; }, 
+                                                            [](int64_t x){ return false; },
+                                                            [](uint64_t x){ return false; }) }, 
+                              { CLASS_TYPE_INT16, make_tuple([](int32_t x){ return x <= INT_MAX; }, 
+                                                             [](int64_t x){ return false; },
+                                                             [](uint64_t x){ return false; }) }, 
+                              { CLASS_TYPE_INT32, make_tuple([](int32_t x){ return true; }, 
+                                                             [](int64_t x){ return false; },
+                                                             [](uint64_t x){ return false; }) }, 
+                              { CLASS_TYPE_INT64, make_tuple([](int32_t x){ return true; }, 
+                                                             [](int64_t x){ return true; },
+                                                             [](uint64_t x){ return false; }) },
+                              { CLASS_TYPE_UINT8, make_tuple([](int32_t x){ return x>= 0 && x <= UCHAR_MAX; }, 
+                                                             [](int64_t x){ return false; },
+                                                             [](uint64_t x){ return false; }) },
+                              { CLASS_TYPE_UINT16, make_tuple([](int32_t x){ return x>= 0 && x <= UINT_MAX; }, 
+                                                              [](int64_t x){ return false; },
+                                                              [](uint64_t x){ return false; }) },
+                              { CLASS_TYPE_UINT32, make_tuple([](int32_t x){ return x >= 0; }, 
+                                                              [](int64_t x){ return x >= 0 && x <= ULONG_MAX;},
+                                                              [](uint64_t x){ return false; }) }, 
+                              { CLASS_TYPE_UINT64, make_tuple([](int32_t x){ return x >= 0; }, 
+                                                              [](int64_t x){ return x >= 0; },
+                                                              [](uint64_t x){ return true; }) } };
 }    
 
 //TO-DO: rearrange in a pattern chain of responsibility's class
@@ -57,23 +73,31 @@ void semantic_visitor::check_binary_action(const std::string& oper, class_type* 
 
 void semantic_visitor::check_define_action(class_type* cls_t, symbol* sym) {
     
-    std::string type_str = cls_t->get_type();
+    //TO-DO:refactor the branch code
+    string type_str = cls_t->get_type();
     
     if(def_num_range_val_map.find(type_str) != def_num_range_val_map.end()) {
         check_define_numeric(cls_t->get_type(), def_num_range_val_map[type_str], sym);
+        return;
+    } else if(type_str == CLASS_TYPE_BOOL && sym->get_type()== SYMBOL_LITERAL_BOOL) {
+        return;
+    } else if(type_str == CLASS_TYPE_CHAR && sym->get_type() == SYMBOL_LITERAL_CHAR) {
+        return;
     }
+    throw semantic_check_unsupported_type(type_str + " unsupported type:" + sym->get_type());
 }
 
-void semantic_visitor::check_define_numeric(const std::string& type_str, 
-                                  std::pair<std::function<bool(int32_t)>, 
-                                            std::function<bool(int64_t)> > check_out_of_range_pair, 
+void semantic_visitor::check_define_numeric(const string& type_str, 
+                                  tuple<function<bool(int32_t)>, 
+                                        function<bool(int64_t)>,
+                                        function<bool(uint64_t)> > check_out_of_range, 
                                   symbol* sym) {
     
     if(sym->get_type() == SYMBOL_LITERAL_INT32) {
         literal_int32_symbol* i32_sym = dynamic_cast<literal_int32_symbol*>(sym);
         ASSERT_CAST(i32_sym, "literal_int32_symbol*", "symbol*");
         int32_t value = i32_sym->get_value();
-        if(check_out_of_range_pair.first(value)) {
+        if(!get<0>(check_out_of_range)(value)) {
             throw semantic_check_out_of_range(type_str + " out of range:" + to_string(value));
         }
         return;
@@ -81,12 +105,19 @@ void semantic_visitor::check_define_numeric(const std::string& type_str,
         literal_int64_symbol* i64_sym = dynamic_cast<literal_int64_symbol*>(sym);
         ASSERT_CAST(i64_sym, "literal_int64_symbol*", "symbol*");
         int64_t value = i64_sym->get_value();
-        if(check_out_of_range_pair.second(value)) {
+        if(!get<1>(check_out_of_range)(value)) {
+            throw semantic_check_out_of_range(type_str + " out of range:" + to_string(value));
+        }
+        return;
+    } else if(sym->get_type() == SYMBOL_LITERAL_UINT64) {
+        literal_uint64_symbol* ui64_sym = dynamic_cast<literal_uint64_symbol*>(sym);
+        ASSERT_CAST(ui64_sym, "literal_uint64_symbol*", "symbol*");
+        uint64_t value = ui64_sym->get_value();
+        if(!get<2>(check_out_of_range)(value)) {
             throw semantic_check_out_of_range(type_str + " out of range:" + to_string(value));
         }
         return;
     }
-    throw semantic_check_unsupported_type(type_str + " unsupported type:" + sym->get_type());
 }
     
 void semantic_visitor::visit(ident_ast& node) {
@@ -321,11 +352,19 @@ void semantic_visitor::visit(num_ast& node) {
                 errno = 0;
                 int64_t i64 = strtoll(num_str.c_str(), nullptr, base);
                 if(i64 == LLONG_MAX && errno == ERANGE) {
-                    LOGGER_ERROR("literal number too large:" + num_str);
-                    return;
+                    //Try uint64
+                    errno = 0;
+                    uint64_t ui64 = strtoull(num_str.c_str(), nullptr, base);
+                    if(ui64 == ULLONG_MAX && errno == ERANGE) {
+                        LOGGER_ERROR("literal number too large:" + num_str);
+                        return;                        
+                    }
+                    node.set_uid("<ui64>:" + to_string(ui64));
+                    sym =  new literal_uint64_symbol(ui64);
+                } else {
+                    node.set_uid("<i64>:" + to_string(i64));
+                    sym = new literal_int64_symbol(i64);                    
                 }
-                node.set_uid("<i64>:" + to_string(i64));
-                sym = new literal_int64_symbol(i64);
             } else {
                 node.set_uid("<i32>:" + to_string(i32));
                 sym = new literal_int32_symbol(i32);
@@ -347,8 +386,8 @@ void semantic_visitor::visit(char_ast& node) {
     
     string value = node.get_char_str();
     size_t length = value.length();
-    if(length != 3 || value[0] != '\'' && value[length-1] != '\'' &&
-       value[0] != '"' && value[length-1] != '"') {
+    if(!(length == 3 && ((value[0] == '\'' && value[length-1] == '\'') ||
+       (value[0] == '"' && value[length-1] == '"')))) {
         LOGGER_ERROR("bug unknown literal char:" + value);
         return;
     }
@@ -486,11 +525,29 @@ void semantic_visitor::visit(arg_ast& node) {
 
 void semantic_visitor::visit(type_ast& node) {
     
-    //TO-DO: create class_type by type_name
+    //TO-DO: need to refactor the following code by using lookup
     string type_name = node.get_type_name();
     class_type* cls_t = nullptr;
     if(type_name == CLASS_TYPE_INT8) {
         cls_t = new int8_class_type;
+    } else if(type_name == CLASS_TYPE_INT16) {
+        cls_t = new int16_class_type;
+    } else if(type_name == CLASS_TYPE_INT32) {
+        cls_t = new int32_class_type;
+    } else if(type_name == CLASS_TYPE_INT64) {
+        cls_t = new int64_class_type;
+    } else if(type_name == CLASS_TYPE_UINT8) {
+        cls_t = new uint8_class_type;
+    } else if(type_name == CLASS_TYPE_UINT16) {
+        cls_t = new uint16_class_type;
+    } else if(type_name == CLASS_TYPE_UINT32) {
+        cls_t = new uint32_class_type;
+    } else if(type_name == CLASS_TYPE_UINT64) {
+        cls_t = new uint64_class_type;
+    } else if(type_name == CLASS_TYPE_BOOL) {
+        cls_t = new bool_class_type;
+    } else if(type_name == CLASS_TYPE_CHAR) {
+        cls_t = new char_class_type;
     }
     if(cls_t == nullptr) {
         LOGGER_ERROR(to_string(node.get_loc()) + ":type '" + type_name + "' is not defined");
